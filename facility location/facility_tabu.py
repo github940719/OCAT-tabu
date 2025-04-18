@@ -1,6 +1,6 @@
 import random
 
-def total_cost(facilities_open, customerCnt, facilityCnt, fixedCost, distanceMatrix):
+def total_cost(facilities_open, customerCnt, facilityCnt, fixedCost, demand, distanceMatrix):
     totalCost = 0
 
     # assign customer to the nearest facility
@@ -12,7 +12,7 @@ def total_cost(facilities_open, customerCnt, facilityCnt, fixedCost, distanceMat
         )
         if assigned_facility == -1:
             return float("inf")  # infeasible if no facility open
-        totalCost += distanceMatrix[i][assigned_facility]
+        totalCost += (distanceMatrix[i][assigned_facility] * demand[i])
 
     # plus the fixed cost
     totalCost += sum(fixedCost[j] for j in range(facilityCnt) if facilities_open[j])
@@ -24,7 +24,7 @@ def tabu_search(facilityCnt, customerCnt, fixedCost, demand, distanceMatrix, max
     # initialize: randomly open several facilities until feasible
     while True:
         current_facilities = [random.choice([0, 1]) for _ in range(facilityCnt)]
-        cost = total_cost(current_facilities, customerCnt, facilityCnt, fixedCost, distanceMatrix)
+        cost = total_cost(current_facilities, customerCnt, facilityCnt, fixedCost, demand, distanceMatrix)
         if cost < float('inf'):
             break
 
@@ -44,7 +44,7 @@ def tabu_search(facilityCnt, customerCnt, fixedCost, demand, distanceMatrix, max
             neighbor = current_facilities[:]
             neighbor[j] = 1 - neighbor[j]  # flip
 
-            n_cost = total_cost(neighbor, customerCnt, facilityCnt, fixedCost, distanceMatrix)
+            n_cost = total_cost(neighbor, customerCnt, facilityCnt, fixedCost, demand, distanceMatrix)
 
             # condition: not in tabu, except better than best_cost
             if (neighbor not in tabu_list and n_cost < best_neighbor_cost) \
@@ -56,7 +56,7 @@ def tabu_search(facilityCnt, customerCnt, fixedCost, demand, distanceMatrix, max
             break  # no feasible neighbor
 
         current_facilities = best_neighbor[:]
-        cost = total_cost(current_facilities, customerCnt, facilityCnt, fixedCost, distanceMatrix)
+        cost = total_cost(current_facilities, customerCnt, facilityCnt, fixedCost, demand, distanceMatrix)
 
         # add to tabu
         tabu_list.append(best_neighbor)
